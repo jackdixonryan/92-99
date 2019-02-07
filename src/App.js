@@ -13,7 +13,11 @@ class App extends Component {
       data: null,
       images: null,
       xpIndex: null,
+      username: "",
+      error: null,
     }
+    this.handleChange = this.handleChange.bind(this);
+    this.handleSubmit = this.handleSubmit.bind(this);
   }
 
   // import images takes a regexp as a parameter...
@@ -66,20 +70,30 @@ class App extends Component {
   }
 
   // mount hook is getting data from our API call and rendering it to the page. 
-  componentDidMount() {
+  getData(username) {
+
+    const spaces = username.replace(' ', '%20');
 
     // importing all skill images from their directory.
     const images = this.importAllImages(require.context('./assets', false, /\.(png|jpe?g|svg)$/));
 
-    const url = 'https://cors-anywhere.herokuapp.com/https://apps.runescape.com/runemetrics/profile/profile?user=%22sala%20san%22';
+    const url = `https://cors-anywhere.herokuapp.com/https://apps.runescape.com/runemetrics/profile/profile?user=%22${spaces}%22`;
 
     axios.get(url)
       .then(res => {
         // and here, setting both images and data on page load.
-        this.setState({
-          data: res.data,
-          images: images
-        })
+
+        if (res.data.error) {
+          this.setState({
+            error: res.data.error
+          });
+        } else {
+          this.setState({
+            data: res.data,
+            images: images,
+            error: null,
+          });
+        }
       })
       .catch(error => {
         console.log(error);
@@ -89,22 +103,31 @@ class App extends Component {
       xpIndex: this.createXPLevelArray()
     });
   }
+
+  handleChange({ target }) {
+    const val = target.value
+    this.setState({
+      username: val
+    });
+  }
+
+  handleSubmit(event) {
+    if (event.keyCode) {
+      if (event.keyCode === 13) {
+        this.getData(this.state.username);
+      }
+    }
+  }
+
   render() {
 
     const SkillStats = () => {      
       return this.state.data.skillvalues.map(skill => 
         <Skill key={ skill.id }>
 
-          <h4>{ skillIndex[skill.id].name }</h4>
-
-          <img src={ this.state.images[`${skillIndex[skill.id].name}-icon.png`] } alt="skill logo"/>
-
-          <p>Level :{ skill.level }</p>
-
-          <p>XP: { Math.floor(skill.xp / 10) }</p>
-
-          {/* Next level is a calculation of the xp required for the level at the next index from current level. */}
-          <p>Next Level: { this.state.xpIndex[skill.level + 1].xpRequired - Math.floor(skill.xp / 10) }</p>
+          <div className="info">
+            <img src={ this.state.images[`${skillIndex[skill.id].name}-icon.png`] } alt="skill logo"/>
+          </div>
 
           <XPCircle 
 
@@ -115,7 +138,7 @@ class App extends Component {
               this.state.xpIndex[skill.level + 1].xpRequired,
               skill.xp 
             )} 
-            id={skillIndex[skill.id].name} 
+            id={skillIndex[skill.id].name}
           />
         </Skill>
       );
@@ -124,7 +147,6 @@ class App extends Component {
     const DidGetData = () => {
       if (this.state.data) {
         return <div>
-            Welcome, { this.state.data.name }
             <SkillGrid>
               <SkillStats />
             </SkillGrid>
@@ -135,7 +157,15 @@ class App extends Component {
     }
 
     return (
-      <DidGetData />
+      <div>
+        <PageHeader>92 / 99</PageHeader>
+        <p>Enter username. View level progress.</p>
+
+        <input type="text" value={this.state.username} onChange={this.handleChange} onKeyUp={this.handleSubmit} />
+
+        <button onClick={this.handleSumbit}>Get My Stats</button>
+        <DidGetData />
+      </div>
     );
   }
 }
@@ -144,8 +174,6 @@ const SkillGrid = styled.div`
   display: grid;
   grid-template-rows: repeat(5, 1fr);
   grid-template-columns: repeat(5, 1fr);
-  width: 80%;
-  height: 80%;
   margin: 0 auto;
 `;
 
@@ -154,6 +182,16 @@ const Skill = styled.div`
   image {
     margin: 0 auto;
   }
+  .info {
+    z-index: 0;
+    position: relative;
+    top: 50%;
+  }
+`;
+
+const PageHeader = styled.h1`
+  font-family: "Press Start 2P", sans-serif;
+  text-align: center;
 `;
 
 export default App;

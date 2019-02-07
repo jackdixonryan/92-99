@@ -3,14 +3,13 @@ import Progress from 'progressbar.js';
 import styled from 'styled-components';
 
 export default class XPCircle extends Component {
-  constructor(props) {
-    super(props);
-  }
 
   componentDidMount() {
     const XPCircle = new Progress.Circle(`#${this.props.id}`, {
       color: '#ff0000',
-      strokeWidth: 1 ,
+      strokeWidth: 3 ,
+      trailColor: '#eeeeee',
+      trailWidth: 3,
       duration: 3000,
       easing: 'easeInOut'
     });
@@ -27,7 +26,8 @@ export default class XPCircle extends Component {
 }
 
 const XP = styled.div`
-  height: 100px;
-  width: 100px;
+  height: 90%;
+  width: 90%;
+  margin: 0 auto;
 `;
 
