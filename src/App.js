@@ -74,9 +74,6 @@ class App extends Component {
 
     const spaces = username.replace(' ', '%20');
 
-    // importing all skill images from their directory.
-    const images = this.importAllImages(require.context('./assets', false, /\.(png|jpe?g|svg)$/));
-
     const url = `https://cors-anywhere.herokuapp.com/https://apps.runescape.com/runemetrics/profile/profile?user=%22${spaces}%22`;
 
     axios.get(url)
@@ -90,7 +87,6 @@ class App extends Component {
         } else {
           this.setState({
             data: res.data,
-            images: images,
             error: null,
           });
         }
@@ -119,7 +115,18 @@ class App extends Component {
     }
   }
 
+  componentDidMount() {
+    // importing all skill images from their directory.
+    const images = this.importAllImages(require.context('./assets', false, /\.(png|jpe?g|svg)$/));
+
+    this.setState({
+      images: images
+    });
+  }
+
   render() {
+
+    const hasData = this.state.data !== null;
 
     const SkillStats = () => {      
       return this.state.data.skillvalues.map(skill => 
@@ -145,19 +152,19 @@ class App extends Component {
     }
     // conditional render: need to wait until AXIOS request resolves before trying to pour data onto the page.
     const DidGetData = () => {
-      if (this.state.data) {
+      if (hasData) {
         return <div>
             <SkillGrid>
               <SkillStats />
             </SkillGrid>
         </div>
       } else {
-        return <div>Loading...</div>
+        return <div></div>
       }
     }
 
     return (
-      <div>
+      <Main>
         <PageHeader>92 / 99</PageHeader>
         <p>Enter username. View level progress.</p>
 
@@ -165,7 +172,7 @@ class App extends Component {
 
         <button onClick={this.handleSumbit}>Get My Stats</button>
         <DidGetData />
-      </div>
+      </Main>
     );
   }
 }
@@ -183,7 +190,7 @@ const Skill = styled.div`
     margin: 0 auto;
   }
   .info {
-    z-index: 0;
+    z-index: 1;
     position: relative;
     top: 50%;
   }
@@ -192,6 +199,17 @@ const Skill = styled.div`
 const PageHeader = styled.h1`
   font-family: "Press Start 2P", sans-serif;
   text-align: center;
+  font-size: 30px;
+  margin-bottom: .5em;
+`;
+
+const Main = styled.div`
+  text-align: center;
+  background: #603813;  
+  background: -webkit-linear-gradient(#b29f94, #603813); 
+  background: linear-gradient(#b29f94, #603813);
+  height: 100vh;
+  padding: 1em;
 `;
 
 export default App;
